@@ -1,116 +1,102 @@
+import store from './store';
+import { renderList, renderError } from './view';
 import './style.styl';
 
 const uiGetButton = document.querySelector('#get-vin');
 const uiVin = document.querySelector('#vin');
-const uiList = document.querySelector('#list');
+const uiYear = document.querySelector('#year');
 const uiListItems = document.querySelector('#list-items');
 const uiListFilterVariable = document.querySelector('#list-fliter-variable');
 const uiListFilterValue = document.querySelector('#list-fliter-value');
 const uiListSortVariable = document.querySelector('#list-sort-variable');
 const uiListSortValue = document.querySelector('#list-sort-value');
-const uiOffline = document.querySelector('#offline');
+const uiIndicator = document.querySelector('#indicator');
 
 let filterVariable = '';
-let filterValue = ''
+let filterValue = '';
 let sortVariable = 0;
 let sortValue = 0;
-let currentRequest = [];
-let requests = {};
+let currentVin = '';
+let currentYear = '';
+let checkYear = false;
+let checkVin = false;
 
 
-uiVin.oninput = event => uiOffline.innerText = navigator.onLine ? '' : 'offline';
+setInterval(() => uiIndicator.innerHTML = navigator.onLine ? '<span class="online"></div>' : '<span class="offline"></div>', 1000);
+
+const render = data => renderList(uiListItems, data, filterValue, filterVariable, sortValue, sortVariable);
+const renderErr = error => renderError(uiListItems, error);
+
+const validate = () => {
+	uiVin.classList.toggle('input--error', !checkVin && uiVin.value);
+	uiYear.classList.toggle('input--error', !checkYear && uiYear.value);
+	uiGetButton.disabled = !checkVin || !checkYear;
+};
+
+uiVin.oninput = (event) => {
+	const value = event.target.value;
+	if (value.length > 3) {
+		store(event.target.value, uiYear.value)
+			.then((data) => {
+				checkVin = data[1].ValueId !== '7' || data[1].ValueId !== '5';
+				validate();
+			});
+	} else {
+		checkVin = false;
+		validate();
+	}
+}
+
+uiYear.oninput = (event) => {
+	const value = +event.target.value;
+	let now = new Date().getFullYear();
+
+	if (event.target.value.length === 4 && !isNaN(parseFloat(value)) && isFinite(value) && value <= now ) {
+		checkYear = true;
+	} else {
+		checkYear = false;
+	}
+	validate();
+}
 
 uiGetButton.onclick = (event) => {
 	event.preventDefault();
-	const val = uiVin.value.toLowerCase();
-
-	if (requests[val]) {
-		currentRequest = val;
-		createList();
-	} else {
-		uiListItems.innerHTML = 'Loading...';
-		if (navigator.onLine) {
-			fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${val}?format=json&modelyear=2011`)
-				.then(response => response.json())
-				.then((data) => {
-					currentRequest = data.SearchCriteria.split(':')[1];
-					requests[currentRequest] = data.Results;
-					createList();
-				})
-				.catch(error => console.log('data', error));
-		} else {
-			uiListItems.innerHTML = 'offline';
-		}
-	}
+	currentVin = uiVin.value;
+	currentYear = uiYear.value;
+	store(currentVin, currentYear).then(render).catch(renderError);
 }
 
 uiListFilterVariable.oninput = (event) => {
 	filterVariable = event.target.value;
-	createList()
+	store(currentVin, currentYear).then(render).catch(renderError);
 };
 uiListFilterValue.oninput = (event) => {
 	filterValue = event.target.value;
-	createList()
+	store(currentVin, currentYear).then(render).catch(renderError);
 };
 
-const sort = (direction) => {
-	if (direction == -1) return 0;
-	else if (direction === 0) return 1
-	else return -1;
+const sort = direct => direct > 0 ? -1 : ++direct;
+
+const getSortClass = (direct) => {
+	switch (direct) {
+		case -1: return 'down';
+		case 1: return 'up';
+		case 0: return '';
+	}
 }
 
 uiListSortVariable.onclick = (event) => {
 	sortValue = 0;
 	sortVariable = sort(sortVariable);
-	createList();
+	event.target.className = `list_sort list_sort--${getSortClass(sortVariable)}`;
+	uiListSortValue.className = `list_sort`;
+	store(currentVin, currentYear).then(render).catch(renderError);
 };
 
 uiListSortValue.onclick = (event) => {
 	sortVariable = 0;
 	sortValue = sort(sortValue);
-	createList();
+	event.target.className = `list_sort list_sort--${getSortClass(sortValue)}`;
+	uiListSortVariable.className = `list_sort`;
+	store(currentVin, currentYear).then(render).catch(renderError);
 };
-
-const createList = () => {
-	uiListItems.innerHTML = '';
-	uiOffline.innerText = navigator.onLine ? '' : 'offline'
-	requests[currentRequest]
-		.filter(item => {
-			const { Variable, Value } = item;
-			let checkVariable
-			let checkValue;
-			checkVariable = !filterVariable || (Variable && Variable.indexOf(filterVariable) !== -1);
-			checkValue = !filterValue || (Value && Value.indexOf(filterValue) !== -1);
-			return checkVariable && checkValue;
-		})
-		.sort((a, b) => {
-			let val1;
-			let val2;
-			let direction;
-			if (sortVariable) {
-				val1 = (a.Variable || '').toLowerCase();
-				val2 = (b.Variable || '').toLowerCase();
-				direction = sortVariable;
-			} else if (sortValue) {
-				val1 = (a.Value || '').toLowerCase();
-				val2 = (b.Value || '').toLowerCase();
-				direction = sortValue;
-			} else return 0;
-
-			if (val1 > val2) return 1 * direction;
-			else if (val1 < val2) return -1 * direction;
-			else return 0;
-
-		})
-		.forEach(item => {
-			const uiItem = document.createElement('tr');
-			const uiItemVariable = document.createElement('td');
-			const uiItemValue = document.createElement('td');
-
-			uiItemVariable.innerText = item.Variable;
-			uiItemValue.innerText = item.Value;
-			uiItem.appendChild(uiItemVariable);
-			uiItem.appendChild(uiItemValue)
-			uiListItems.appendChild(uiItem);
-		});
-}

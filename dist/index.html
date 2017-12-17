@@ -9,9 +9,10 @@
 <body>
 	<div id="app" class="app">
 		<form action="/" class="form">
-			<input type="text" id="vin" value="5UXWX7C5*BA" />
-			<button id="get-vin">get</button>
-			<span id="offline"></span>
+			<input name="vin" class="input form_vin" type="text" id="vin" />
+			<input name="year" class="input form_year" type="text" id="year" />
+			<button class="button" id="get-vin" disabled>get</button>
+			<span id="indicator"><div class="online"></div></span>
 		</form>
 		<table id="list" class="list" cellspacing="0" cellpadding="0">
 			<tr>
@@ -20,13 +21,15 @@
 			</tr>
 			<tr>
 				<th>
-					<input id="list-fliter-variable" type="text">
+					<input class="input input--wide" id="list-fliter-variable" type="text">
 				</th>
 				<th>
-					<input id="list-fliter-value" type="text">
+					<input class="input input--wide" id="list-fliter-value" type="text">
 				</th>
 			</tr>
-			<tbody id="list-items" class="list_items"></tbody>
+			<tbody id="list-items" class="list_items">
+				<tr><td colspan="2" class="list_empty">empty list</td></tr>
+			</tbody>
 		</table>
 	</div>
 
