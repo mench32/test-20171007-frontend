@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+</head>
+<body>
+	<div id="app" class="app">
+		<form action="/" class="form">
+			<input type="text" id="vin" value="5UXWX7C5*BA" />
+			<button id="get-vin">get</button>
+			<span id="offline"></span>
+		</form>
+		<table id="list" class="list" cellspacing="0" cellpadding="0">
+			<tr>
+				<th class="list_sort" id="list-sort-variable">Variable</th>
+				<th class="list_sort" id="list-sort-value">Value</th>
+			</tr>
+			<tr>
+				<th>
+					<input id="list-fliter-variable" type="text">
+				</th>
+				<th>
+					<input id="list-fliter-value" type="text">
+				</th>
+			</tr>
+			<tbody id="list-items" class="list_items"></tbody>
+		</table>
+	</div>
+
+	<script src="./app.js" ></script>
+</body>
+</html>

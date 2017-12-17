@@ -1,0 +1,37 @@
+*
+	margin 0
+body
+	font-family sans-serif
+.app
+	margin 0 auto
+	width 960px
+
+.form
+	background #ddd
+	padding 16px
+.list
+	width 100%
+	background #efefef
+	padding 16px
+	margin 0
+	border none
+	td
+	th
+		margin 0
+		border 0
+		padding 8px
+		text-align: left
+	&_sort
+		&--up
+			&:after
+				content ' \\/'
+		&--down
+			&:after
+				content ' /\\'
+	&_items
+		tr
+			margin 0
+			border 0
+			&:nth-child(2n)
+				background: #ccc
+
